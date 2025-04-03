@@ -8,20 +8,17 @@
     </template>
 
     <div v-if="modelValue.length" class="content">
-      <template
-        v-for="(item, index) in modelValue.map((comp, idx) => ({ comp, idx }))"
-        :key="index"
-      >
+      <template v-for="(item, index) in modelValue" :key="index">
         <div class="slot-item">
-          <component :is="item.comp"></component>
-          <button @click="removeSlot(item.idx)">Удалить</button>
+          <span>{{ item }}</span>
+          <button @click="removeSlot(index)">Удалить</button>
         </div>
       </template>
     </div>
 
     <p v-else class="empty-text">Лист пуст</p>
 
-    <template v-if="modelValue.length && $slots.footer">
+    <template v-if="$slots.footer && modelValue.length">
       <hr />
       <footer class="footer">
         <slot name="footer"></slot>
@@ -31,25 +28,16 @@
 </template>
 
 <script setup>
-import { computed, useSlots, defineProps, defineEmits, watchEffect } from "vue";
+import { defineProps, defineEmits } from "vue";
 
 const props = defineProps({
   modelValue: Array,
 });
 
 const emit = defineEmits(["update:modelValue"]);
-const slots = useSlots();
-
-const slotsContent = computed(() => props.modelValue);
-
-watchEffect(() => {
-  if (slots.default) {
-    emit("update:modelValue", slots.default());
-  }
-});
 
 const removeSlot = (index) => {
-  const updatedSlots = [...slotsContent.value];
+  const updatedSlots = [...props.modelValue];
   updatedSlots.splice(index, 1);
   emit("update:modelValue", updatedSlots);
 };
