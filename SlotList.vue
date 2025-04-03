@@ -1,24 +1,27 @@
 <template>
   <div class="container">
-    <template v-if="slotsContent.length && $slots.header">
+    <template v-if="modelValue.length && $slots.header">
       <header class="header">
         <slot name="header"></slot>
       </header>
       <hr />
     </template>
 
-    <div v-if="slotsContent.length" class="content">
-      <template v-for="(item, index) in slotsContent" :key="index">
+    <div v-if="modelValue.length" class="content">
+      <template
+        v-for="(item, index) in modelValue.map((comp, idx) => ({ comp, idx }))"
+        :key="index"
+      >
         <div class="slot-item">
-          <component :is="item"></component>
-          <button @click="removeSlot(index)">Удалить</button>
+          <component :is="item.comp"></component>
+          <button @click="removeSlot(item.idx)">Удалить</button>
         </div>
       </template>
     </div>
 
     <p v-else class="empty-text">Лист пуст</p>
 
-    <template v-if="slotsContent.length && $slots.footer">
+    <template v-if="modelValue.length && $slots.footer">
       <hr />
       <footer class="footer">
         <slot name="footer"></slot>
@@ -28,17 +31,27 @@
 </template>
 
 <script setup>
-import { ref, watchEffect, useSlots } from "vue";
+import { computed, useSlots, defineProps, defineEmits, watchEffect } from "vue";
 
+const props = defineProps({
+  modelValue: Array,
+});
+
+const emit = defineEmits(["update:modelValue"]);
 const slots = useSlots();
-const slotsContent = ref([]);
+
+const slotsContent = computed(() => props.modelValue);
 
 watchEffect(() => {
-  slotsContent.value = slots.default ? slots.default() : [];
+  if (slots.default) {
+    emit("update:modelValue", slots.default());
+  }
 });
 
 const removeSlot = (index) => {
-  slotsContent.value.splice(index, 1);
+  const updatedSlots = [...slotsContent.value];
+  updatedSlots.splice(index, 1);
+  emit("update:modelValue", updatedSlots);
 };
 </script>
 
